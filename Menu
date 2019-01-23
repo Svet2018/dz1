@@ -1,0 +1,148 @@
+
+//Создание класса Container (основой шаблон)
+// public, protected, private
+//с помощью параметров (id, className, tagName)задаются свойства объектов
+function Container(id, className, tagName) {
+    // public (создание публичых свойств, можно обратиться через точку)
+    //значения свойств будут разные 
+    this.id = id;
+    this.className = className;
+    // protected ("__" сигнал для программистов (договоренность) что его менять не надо)
+    this._tagName = tagName;
+    // private (создание скрытого свойства)
+    var element;
+    //метод получения скрытого элемента
+    this.getElement = function () {
+        return element;
+    }
+     //метод изменения скрытого элемента
+    this.setElement = function (newValue) {
+    }
+}
+//определение прототипа для всех будующих объектов метода render ("отрисовщик")(Container.prototype=объект._proto_)
+//создание метода render в классе Container
+Container.prototype.render = function () {
+    //получение элемента
+    var element = this.getElement();
+    // проверка на наличие элемента, условие, если элемента нет - создать элемент, с определенным для него тегом
+    if (!element) {
+        //создание элемента с определенным тегом
+        element = document.createElement(this._tagName);
+        //значения свойств будут разные 
+        element.id = this.id;
+        element.className = this.className;
+    //изменение скрытого элемента
+        this.setElement(element);
+    }
+    //отрисовка элемента
+    return element;
+}
+
+//дз1_---------------------------------------------
+//создание метода remove в протатипе класса Container
+Container.prototype.remove = function () {
+    //получение елемента
+    var element = this.getElement();
+    //определение наличия документа 
+    if (element) {
+        // если элемент есть, то удалить из родителя
+        element.parentElement.removeChild(element);
+        //обнуление документа
+        this.setElement(null);
+        }
+   }
+//------------------------------------------------------
+// создаие класса Menu
+function Menu(id, className, items) {
+    Container.call(this, id, className, "ul");
+    // protected
+    this._items = items;
+}
+
+Menu.prototype = Object.create(Container.prototype);
+Menu.prototype.render = function () {
+    var container = Container.prototype.render.call(this);
+
+    this._items.forEach(function (item) {
+        if (item instanceof Container) {
+            container.appendChild(item.render());
+        }
+    });
+
+    return container;
+}
+
+// создаие класса MenuItem
+function MenuItem(className, link, title) {
+    Container.call(this, "", className, "li");
+
+    this.link = link;
+    this.title = title;
+}
+
+MenuItem.prototype = Object.create(Container.prototype);
+MenuItem.prototype.render = function () {
+    var container = Container.prototype.render.call(this);
+
+    var a = document.createElement("a");
+    a.textContent = this.title;
+    a.href = this.link;
+
+    container.appendChild(a);
+
+    return container;
+}
+
+//создание класса SuperrMenu, содержит параметры Menu, MenuItem
+function SuperMenu(id, className, items, link, title) {
+    //наследование параметров 2 классов MenuItem, Menu 
+    MenuItem.call(this, "item", link, title);
+    Menu.call(this, id, className, items);
+}
+
+//определение прототипа для SuperMenu
+// debugger
+SuperMenu.prototype = Object.create(Menu.prototype);
+//создание метода remove в протатипе класса SuperMenu
+SuperMenu.prototype.render = function () {
+    //проверка на Menu или MenuItem
+    //если переданы link и title - MenuItem
+if(this.link && this.title){
+    //создание и отрисовка пункта меню
+    var  menuItem = new MenuItem("item", this.link, this.title).render();
+    //создание и отрисовка   меню
+    var  menu = Menu.prototype.render.call(this);
+    //определение местополжения menuItem в menu
+    menuItem.appendChild(menu);
+    //возвращение menuItem
+    return menuItem;
+    //если нет link и title - Menu
+    } else {
+    //отрисовка  как обычное меню, если нет link и title
+    return Menu.prototype.render.call(this);
+    }
+}
+
+var menuItem1 = new MenuItem("drop_link", "//shirts", "Dresses");
+var menuItem2 = new MenuItem("drop_link", "/shop/boots", "Tops");
+var menuItem6 = new MenuItem("drop_link", "/shop/boots", "Sweaters/Knits");
+var menuItem7 = new MenuItem("drop_link", "/shop/boots", "Jackets/Coats");
+var menuItem2 = new MenuItem("drop_link", "/shop/boots", "Tops");
+
+
+var menuItem3 = new MenuItem("menu-item", "/blog", "Blog");
+
+var menuItem4 = new MenuItem("menu-item", "/news", "News");
+
+var menuItem5 = new MenuItem("menu-item", "/blog", "Blog");
+
+var menuItem6 = new MenuItem("menu-item", "/news", "News");
+
+var SuperMenu1 = new SuperMenu ("submenu", "submenu", [menuItem1, menuItem2], "/shop", "Shop");
+
+var SuperMenu2 = new SuperMenu ("menu", "menu", [menuItem3, menuItem4, SuperMenu1], "/main", "Main");
+
+var SuperMenu3 = new SuperMenu ("menu", "menu", [menuItem5, menuItem6, SuperMenu2]);
+
+
+document.body.appendChild(SuperMenu3.render()); 
